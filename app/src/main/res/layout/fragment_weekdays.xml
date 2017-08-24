@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical|center_horizontal|center" >
+
+    <CheckBox android:id="@+id/checkbox_monday"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/monday"
+        android:onClick="onCheckboxClicked"/>
+    <CheckBox android:id="@+id/checkbox_tuesday"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/tuesday"
+        android:onClick="onCheckboxClicked"/>
+    <CheckBox android:id="@+id/checkbox_wednesday"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/wednesday"
+        android:onClick="onCheckboxClicked"/>
+    <CheckBox android:id="@+id/checkbox_thursday"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/thursday"
+        android:onClick="onCheckboxClicked"/>
+    <CheckBox android:id="@+id/checkbox_friday"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/friday"
+        android:onClick="onCheckboxClicked"/>
+    <CheckBox android:id="@+id/checkbox_saturday"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/saturday"
+        android:onClick="onCheckboxClicked"/>
+    <CheckBox android:id="@+id/checkbox_sunday"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/sunday"
+        android:onClick="onCheckboxClicked"/>
+
+    <!--<FrameLayout-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_gravity="bottom|right">-->
+        <!--<android.support.design.widget.FloatingActionButton-->
+            <!--android:id="@+id/monday"-->
+            <!--android:layout_width="35dp"-->
+            <!--android:layout_height="35dp"-->
+            <!--android:layout_alignParentTop="true"/>-->
+
+        <!--<TextView-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:layout_gravity="center"-->
+            <!--android:text="M"-->
+            <!--android:elevation="16dp"-->
+            <!--android:textColor="@android:color/white"-->
+            <!--android:textAppearance="?android:attr/textAppearanceMedium" />-->
+    <!--</FrameLayout>-->
+
+    <!--<FrameLayout-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_gravity="bottom|right">-->
+        <!--<android.support.design.widget.FloatingActionButton-->
+            <!--android:id="@+id/tuesday"-->
+            <!--android:layout_width="35dp"-->
+            <!--android:layout_height="35dp"-->
+            <!--android:layout_alignParentTop="true"/>-->
+
+        <!--<TextView-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:layout_gravity="center"-->
+            <!--android:text="T"-->
+            <!--android:elevation="16dp"-->
+            <!--android:textColor="@android:color/white"-->
+            <!--android:textAppearance="?android:attr/textAppearanceMedium" />-->
+    <!--</FrameLayout>-->
+
+
+    <!--<FrameLayout-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_gravity="bottom|right">-->
+        <!--<android.support.design.widget.FloatingActionButton-->
+            <!--android:id="@+id/wednesday"-->
+            <!--android:layout_width="35dp"-->
+            <!--android:layout_height="35dp"-->
+            <!--android:layout_alignParentTop="true"/>-->
+
+        <!--<TextView-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:layout_gravity="center"-->
+            <!--android:text="W"-->
+            <!--android:elevation="16dp"-->
+            <!--android:textColor="@android:color/white"-->
+            <!--android:textAppearance="?android:attr/textAppearanceMedium" />-->
+    <!--</FrameLayout>-->
+
+    <!--<FrameLayout-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_gravity="bottom|right">-->
+        <!--<android.support.design.widget.FloatingActionButton-->
+            <!--android:id="@+id/thursday"-->
+            <!--android:layout_width="35dp"-->
+            <!--android:layout_height="35dp"-->
+            <!--android:layout_alignParentTop="true"/>-->
+
+        <!--<TextView-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:layout_gravity="center"-->
+            <!--android:text="T"-->
+            <!--android:elevation="16dp"-->
+            <!--android:textColor="@android:color/white"-->
+            <!--android:textAppearance="?android:attr/textAppearanceMedium" />-->
+    <!--</FrameLayout>-->
+
+    <!--<FrameLayout-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_gravity="bottom|right">-->
+        <!--<android.support.design.widget.FloatingActionButton-->
+            <!--android:id="@+id/friday"-->
+            <!--android:layout_width="35dp"-->
+            <!--android:layout_height="35dp"-->
+            <!--android:layout_alignParentTop="true"/>-->
+
+        <!--<TextView-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:layout_gravity="center"-->
+            <!--android:text="F"-->
+            <!--android:elevation="16dp"-->
+            <!--android:textColor="@android:color/white"-->
+            <!--android:textAppearance="?android:attr/textAppearanceMedium" />-->
+    <!--</FrameLayout>-->
+
+    <!--<FrameLayout-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_gravity="bottom|right">-->
+        <!--<android.support.design.widget.FloatingActionButton-->
+            <!--android:id="@+id/saturday"-->
+            <!--android:layout_width="35dp"-->
+            <!--android:layout_height="35dp"-->
+            <!--android:layout_alignParentTop="true"/>-->
+
+        <!--<TextView-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:layout_gravity="center"-->
+            <!--android:text="S"-->
+            <!--android:elevation="16dp"-->
+            <!--android:textColor="@android:color/white"-->
+            <!--android:textAppearance="?android:attr/textAppearanceMedium" />-->
+    <!--</FrameLayout>-->
+
+    <!--<FrameLayout-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_gravity="bottom|right">-->
+        <!--<android.support.design.widget.FloatingActionButton-->
+            <!--android:id="@+id/sunday"-->
+            <!--android:layout_width="35dp"-->
+            <!--android:layout_height="35dp"-->
+            <!--android:layout_alignParentTop="true"/>-->
+
+        <!--<TextView-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:layout_gravity="center"-->
+            <!--android:text="S"-->
+            <!--android:elevation="16dp"-->
+            <!--android:textColor="@android:color/white"-->
+            <!--android:textAppearance="?android:attr/textAppearanceMedium" />-->
+    <!--</FrameLayout>-->
+</LinearLayout>

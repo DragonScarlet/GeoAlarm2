@@ -1,0 +1,9 @@
+<resources>
+    <dimen name="fab_margin">16dp</dimen>
+    <dimen name="fab_outside_margin">16dp</dimen>
+
+    <dimen name="search_view_inset">16dp</dimen>
+    <dimen name="list_item_spacing">16dp</dimen>
+    <dimen name="list_item_spacing_half">8dp</dimen>
+    <dimen name="out_of_bounds">1000dp</dimen>
+</resources>
