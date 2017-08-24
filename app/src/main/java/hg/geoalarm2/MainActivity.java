@@ -247,8 +247,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         removeCurrentMarker();
                         break;
                     case EDIT:
+                        Singleton.getInstance().setOldCameraPosition(mMap.getCameraPosition());
                         removeTempMarker();
                         showDetailsMenu();
+                        moveWithStyleToPosition(Singleton.getInstance().getCurrentMarker().getPosition());
                         break;
                     default:
                         break;
