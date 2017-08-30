@@ -16,6 +16,8 @@
         android:id="@+id/edit_alarm_name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:maxLines="1"
+        android:inputType="text"
         android:ems="10"
         android:text="Name" />
 
@@ -37,13 +39,21 @@
                 android:text="@string/alarm_start" />
 
             <Button
-                android:layout_width="wrap_content"
+                android:id="@+id/button_start_time"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Start"
                 android:onClick="showTimePickerDialog" />
 
+            <TextView
+                android:id="@+id/textView_start_day"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/alarm_start_day" />
+
             <Button
-                android:layout_width="wrap_content"
+                android:id="@+id/button_start_day"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Start Day"
                 android:onClick="showDatePickerDialog" />
@@ -61,13 +71,20 @@
                 android:text="@string/alarm_end" />
 
             <Button
-                android:layout_width="wrap_content"
+                android:id="@+id/button_end_time"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="End"
                 android:onClick="showTimePickerDialog" />
 
+            <TextView
+                android:id="@+id/textView_end_day"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/alarm_end_day" />
             <Button
-                android:layout_width="wrap_content"
+                android:id="@+id/button_end_day"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="End Day"
                 android:onClick="showDatePickerDialog" />
@@ -83,34 +100,44 @@
     <SeekBar
         android:id="@+id/seekBar_alarm_area"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="30dp" />
 
 
-
-    <RadioGroup xmlns:android="http://schemas.android.com/apk/res/android"
+    <RadioGroup
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
-        <RadioButton android:id="@+id/radio_single"
+        android:orientation="horizontal">
+
+        <RadioButton
+            android:id="@+id/radio_single"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:onClick="onRadioButtonClicked"
             android:text="@string/single_time"
-            android:onClick="onRadioButtonClicked"/>
-        <RadioButton android:id="@+id/radio_multiple"
+            android:layout_weight="1"/>
+
+        <RadioButton
+            android:id="@+id/radio_multiple"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:onClick="onRadioButtonClicked"
             android:text="@string/multiple_times"
-            android:onClick="onRadioButtonClicked"/>
+            android:layout_weight="1" />
     </RadioGroup>
 
 
     <include layout="@layout/fragment_weekdays"/>
 
+    <Spinner
+        android:id="@+id/planets_spinner"
+        android:layout_width="fill_parent"
+        android:layout_height="30dp" />
+
     <Button
         android:id="@+id/createButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Button" />
+        android:text="@string/alarm_save" />
 
 
 

@@ -5,6 +5,7 @@ import android.app.Dialog;
 import android.icu.util.Calendar;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
+import android.widget.Button;
 import android.widget.DatePicker;
 
 /**
@@ -27,6 +28,16 @@ public class DatePickerFragment extends DialogFragment
     }
 
     public void onDateSet(DatePicker view, int year, int month, int day) {
-        // Do something with the date chosen by the user
+        Date date = new Date(year, month, day);
+        if(Singleton.getInstance().getCurrentState().equals(State.CREATE_START_DAY)){
+            Singleton.getInstance().getCurrentAlarm().setStartDay(date);
+            Button btn = Singleton.getInstance().getMainActivity().findViewById(R.id.button_start_day);
+            btn.setText(date.getStrDate());
+        }
+        else{
+            Singleton.getInstance().getCurrentAlarm().setEndDay(date);
+            Button btn = Singleton.getInstance().getMainActivity().findViewById(R.id.button_end_day);
+            btn.setText(date.getStrDate());
+        }
     }
 }

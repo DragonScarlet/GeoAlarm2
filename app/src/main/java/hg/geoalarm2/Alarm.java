@@ -1,9 +1,6 @@
 package hg.geoalarm2;
 
-import com.google.android.gms.maps.model.Marker;
-
-import java.time.MonthDay;
-import java.util.Date;
+import com.google.android.gms.maps.model.LatLng;
 
 /**
  * Created by dimkn on 7/20/2017.
@@ -20,21 +17,29 @@ public class Alarm {
     }
 
     private String name;
-    private Date startTime;
-    private Date endTime;
+    private Time startTime;
+    private Time endTime;
+    private Date startDay;
+    private Date endDay;
     private float radius;
     private boolean active;
     private type type;
     private Weekdays[] weekdays;
+    private double latitude;
+    private double longitude;
 
-    public Alarm(String name, Date startTime, Date endTime, float radius, boolean active, type type, Weekdays[] weekdays) {
+    public Alarm(String name, Time startTime, Time endTime, Date startDay, Date endDay, float radius, boolean active, Alarm.type type, Weekdays[] weekdays, double latitude, double longitude) {
         this.name = name;
         this.startTime = startTime;
         this.endTime = endTime;
+        this.startDay = startDay;
+        this.endDay = endDay;
         this.radius = radius;
         this.active = active;
         this.type = type;
         this.weekdays = weekdays;
+        this.latitude = latitude;
+        this.longitude = longitude;
     }
 
     public String getName() {
@@ -45,20 +50,36 @@ public class Alarm {
         this.name = name;
     }
 
-    public Date getStartTime() {
+    public Time getStartTime() {
         return startTime;
     }
 
-    public void setStartTime(Date startTime) {
+    public void setStartTime(Time startTime) {
         this.startTime = startTime;
     }
 
-    public Date getEndTime() {
+    public Time getEndTime() {
         return endTime;
     }
 
-    public void setEndTime(Date endTime) {
+    public void setEndTime(Time endTime) {
         this.endTime = endTime;
+    }
+
+    public Date getStartDay() {
+        return startDay;
+    }
+
+    public void setStartDay(Date startDay) {
+        this.startDay = startDay;
+    }
+
+    public Date getEndDay() {
+        return endDay;
+    }
+
+    public void setEndDay(Date endDay) {
+        this.endDay = endDay;
     }
 
     public float getRadius() {
@@ -91,5 +112,25 @@ public class Alarm {
 
     public void setWeekdays(Weekdays[] weekdays) {
         this.weekdays = weekdays;
+    }
+
+    public double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(double latitude) {
+        this.latitude = latitude;
+    }
+
+    public double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(double longitude) {
+        this.longitude = longitude;
+    }
+
+    public LatLng getLatLng(){
+        return new LatLng(latitude, longitude);
     }
 }

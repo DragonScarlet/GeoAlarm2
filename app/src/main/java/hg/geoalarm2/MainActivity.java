@@ -12,10 +12,12 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.RadioButton;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -34,16 +36,20 @@ import com.touchboarder.weekdaysbuttons.WeekdaysDataSource;
 
 import java.util.HashMap;
 
-import static hg.geoalarm2.MainActivity.status.CREATE;
-import static hg.geoalarm2.MainActivity.status.EDIT;
-import static hg.geoalarm2.MainActivity.status.NO_MARKER;
-import static hg.geoalarm2.MainActivity.status.REMOVE;
+import static hg.geoalarm2.State.CREATE;
+import static hg.geoalarm2.State.CREATE_END_DAY;
+import static hg.geoalarm2.State.CREATE_END_TIME;
+import static hg.geoalarm2.State.CREATE_START_DAY;
+import static hg.geoalarm2.State.CREATE_START_TIME;
+import static hg.geoalarm2.State.EDIT;
+import static hg.geoalarm2.State.NO_MARKER;
+import static hg.geoalarm2.State.REMOVE;
+
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, AlarmDetailsListDialogFragment.Listener {
 
     boolean hide = true;
     private GoogleMap mMap;
-    private HashMap<LatLng, Alarm> alarmsMap;
     public Log log;
 
 
@@ -52,11 +58,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        Singleton.getInstance().setMainActivity(this);
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-//        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-//        setSupportActionBar(toolbar);
         hideDetailsMenu();
         final FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         final FloatingActionButton fab2 = (FloatingActionButton) findViewById(R.id.fab2);
@@ -74,30 +79,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 //                        .setAction("Action", null).show();
                 fab.startAnimation(shake);
                 AlarmDetailsListDialogFragment.newInstance(5).show(getSupportFragmentManager(), "dialog");
-               /*
-                int offset = -300;
-                int tweaker = 0;
-                int animationTime = 1000;
-                if(hide){
-                    hide = false;
-                    fab2.setEnabled(true);
-                    fab3.setEnabled(true);
-                    deleteButton.setEnabled(true);
-                    animateBtn(fab2, 0, (offset * 1) - tweaker, 0, 0, animationTime);
-                    animateBtn(fab3, 0, (offset * 2) - tweaker,0,0, animationTime);
-                    animateBtn(deleteButton, 0, (offset * 3) - tweaker,0,0, animationTime);
-                    deleteButton.setTranslationX((offset * 3) - tweaker);
-                }
-                else{
-                    hide = true;
-                    fab2.setEnabled(false);
-                    fab3.setEnabled(false);
-                    deleteButton.setEnabled(false);
-                    animateBtn(fab2, (offset * 1) - tweaker, 0, 0, 0, animationTime);
-                    animateBtn(fab3, (offset * 2) - tweaker, 0, 0,0, animationTime);
-                    animateBtn(deleteButton, (offset * 3) - tweaker, 0, 0,0, animationTime);
-                }
-*/
             }
         });
 
@@ -123,12 +104,60 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 addCurrentMarker();
                 resetCamera();
                 hideDetailsMenu();
-                currentStatus = NO_MARKER;
+                DataManager.saveHashMap("Alarms", Singleton.getInstance().getAlarmsMap());
+                Singleton.getInstance().setCurrentState(NO_MARKER);
             }
         } );
 
+        Button btnStartTime = (Button) findViewById(R.id.button_start_time);
+        btnStartTime.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Singleton.getInstance().setCurrentState(CREATE_START_TIME);
+                showTimePickerDialog(view);
+            }
+        });
+
+        Button btnEndTime = (Button) findViewById(R.id.button_end_time);
+        btnEndTime.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Singleton.getInstance().setCurrentState(CREATE_END_TIME);
+                showTimePickerDialog(view);
+            }
+        });
+
+        Button btnStartDay = (Button) findViewById(R.id.button_start_day);
+        btnStartDay.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Singleton.getInstance().setCurrentState(CREATE_START_DAY);
+                showDatePickerDialog(view);
+            }
+        });
+
+        Button btnEndDay = (Button) findViewById(R.id.button_end_day);
+        btnEndDay.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Singleton.getInstance().setCurrentState(CREATE_END_DAY);
+                showDatePickerDialog(view);
+            }
+        });
+
         RadioButton radio1 = (RadioButton) findViewById(R.id.radio_single);
         radio1.setChecked(true);
+
+        Spinner spinner = (Spinner) findViewById(R.id.planets_spinner);
+        // Create an ArrayAdapter using the string array and a default spinner layout
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+                R.array.planets_array, android.R.layout.simple_spinner_item);
+        // Specify the layout to use when the list of choices appears
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        // Apply the adapter to the spinner
+        spinner.setAdapter(adapter);
+
+        Singleton.getInstance().setCurrentState(NO_MARKER);
     }
 
     private void createAlarm(){
@@ -144,12 +173,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private void animateBtn(FloatingActionButton btn, int x, int y, int time){
-//        Animation animation = new TranslateAnimation(x1,x2,y1,y2);
-//        animation.setDuration(time);
-//        animation.setFillAfter(true);
-//        btn.startAnimation(animation);
-//        btn.setTranslationX(x2);
-//        btn.setTranslationY(y2);
         btn.animate()
                 .translationX(x)
                 .translationY(y)
@@ -179,23 +202,24 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         return super.onOptionsItemSelected(item);
     }
 
-    private static final LatLng SYDNEY = new LatLng(-33.88,151.21);
-    private static final LatLng MOUNTAIN_VIEW = new LatLng(37.4, -122.1);
     @Override
     public void onMapReady(GoogleMap googleMap){
-        alarmsMap = new HashMap<>();
+        HashMap<String, Alarm> alarms = DataManager.getHashMap("Alarms");
+
+        Singleton.getInstance().setAlarmsMap(alarms);
+
         mMap = googleMap;
         mMap.getUiSettings().setMapToolbarEnabled(false);
 
-        // Add a marker in Sydney and move the camera
-        LatLng sydney = new LatLng(-34, 151);
-        BitmapDescriptor icon = BitmapDescriptorFactory.fromResource(R.mipmap.ic_res);
-
-        Marker marker = mMap.addMarker(new MarkerOptions().position(sydney)
-                .title("Marker in Sydney")
-                .icon(icon)
-        );
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+        for (String strLatLng : Singleton.getInstance().getAlarmsMap().keySet()) {
+            Alarm alarm = Singleton.getInstance().getAlarmsMap().get(strLatLng);
+            BitmapDescriptor icon = BitmapDescriptorFactory.fromResource(R.mipmap.ic_res);
+            MarkerOptions markerOptions = new MarkerOptions()
+                    .position(alarm.getLatLng())
+                    .title("Edit")
+                    .icon(icon);
+            mMap.addMarker(markerOptions);
+        }
 
         mMap.setOnMapClickListener(new OnMapClickListener() {
             @Override
@@ -209,24 +233,24 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             @Override
             public boolean onMarkerClick(Marker marker) {
                 hideDetailsMenu();
-                if(alarmsMap.containsKey(marker.getPosition())){
+                if(Singleton.getInstance().getAlarmsMap().containsKey(getMapKey(Singleton.getInstance().getCurrentMarker()))){
                     removeTempMarker();
                     if(!marker.getTitle().equals("Edit")){
                         marker.setTitle("Edit");
-                        currentStatus = EDIT;
+                        Singleton.getInstance().setCurrentState(EDIT);
                     }
                     else{
                         marker.setTitle("Remove");
-                        currentStatus = REMOVE;
+                        Singleton.getInstance().setCurrentState(REMOVE);
                     }
                 }
                 else{
                     marker.setTitle("Create");
-                    currentStatus = CREATE;
+                    Singleton.getInstance().setCurrentState(CREATE);
                 }
 
                 Singleton.getInstance().setCurrentMarker(marker);
-                notifyMe(currentStatus.toString());
+                notifyMe(Singleton.getInstance().getCurrentState().toString());
 
                 return false;
 
@@ -237,7 +261,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
             @Override
             public void onInfoWindowClick(Marker marker) {
-                switch (currentStatus){
+                switch (Singleton.getInstance().getCurrentState()){
                     case CREATE:
                         Singleton.getInstance().setOldCameraPosition(mMap.getCameraPosition());
                         showDetailsMenu();
@@ -265,12 +289,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     }
 
-
-    public enum status {
-        CREATE, NO_MARKER, EDIT, REMOVE
-    }
-    private status currentStatus = NO_MARKER;
-
     private void moveWithStyleToPosition(LatLng latLng){
         mMap.animateCamera(CameraUpdateFactory.newCameraPosition(CameraManager.getCameraPositionWithStyle(latLng)));
     }
@@ -284,10 +302,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private void handleNewMarkers(LatLng point){
-        currentStatus = NO_MARKER;
+        Singleton.getInstance().setCurrentState(NO_MARKER);
         handelNewMarker(point);
         moveToPosition(point);
-        notifyMe(currentStatus.toString());
+        notifyMe(Singleton.getInstance().getCurrentState().toString());
     }
 
     private void handelNewMarker(LatLng point){
@@ -298,7 +316,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private void removeTempMarker(){
         if(Singleton.getInstance().getCurrentMarker() != null &&
-                !alarmsMap.containsKey(Singleton.getInstance().getCurrentMarker().getPosition())){
+                !Singleton.getInstance().getAlarmsMap().containsKey(getMapKey(Singleton.getInstance().getCurrentMarker()))){
             removeCurrentMarker();
         }
     }
@@ -310,7 +328,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private void createMarker(LatLng point){
         Marker tmp =  mMap.addMarker(new MarkerOptions().position(point).title("Create New Alarm"));
         Singleton.getInstance().setCurrentMarker(tmp);
-        FloatingActionButton addButton = (FloatingActionButton) findViewById(R.id.addButton);
+        //FloatingActionButton addButton = (FloatingActionButton) findViewById(R.id.addButton);
 //        animateBtn(addButton, 0, 100, 250);
     }
 
@@ -319,7 +337,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             Singleton.getInstance().getCurrentMarker().remove();
             Singleton.getInstance().setCurrentMarker(null);
         }
-        currentStatus = NO_MARKER;
+        Singleton.getInstance().setCurrentState(NO_MARKER);
     }
 
     private void addCurrentMarker(){
@@ -334,8 +352,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
 
-            Alarm tmp = new Alarm("",null,null,100,true,Alarm.type.SINGLE, null);
-            alarmsMap.put(Singleton.getInstance().getCurrentMarker().getPosition(), tmp);
+            Alarm tmp = new Alarm(alarmName.getText().toString(),null,null,null,null, 0, false, null, null,
+                    Singleton.getInstance().getCurrentMarker().getPosition().latitude, Singleton.getInstance().getCurrentMarker().getPosition().longitude);
+            Singleton.getInstance().getAlarmsMap().put(getMapKey(Singleton.getInstance().getCurrentMarker()), tmp);
             BitmapDescriptor icon = BitmapDescriptorFactory.fromResource(R.mipmap.ic_res);
             Singleton.getInstance().getCurrentMarker().setIcon(icon);
         }
@@ -390,6 +409,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void showDatePickerDialog(View v) {
         DialogFragment newFragment = new DatePickerFragment();
         newFragment.show(getSupportFragmentManager(), "datePicker");
+    }
+
+    private String getMapKey(Marker marker){
+        return marker.getPosition().latitude + "###" + marker.getPosition().longitude;
     }
 
 }

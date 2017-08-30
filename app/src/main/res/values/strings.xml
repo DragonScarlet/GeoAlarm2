@@ -5,6 +5,8 @@
     <string name="alarm_name">Name</string>
     <string name="alarm_start">Start Time</string>
     <string name="alarm_end">End Time</string>
+    <string name="alarm_start_day">Start Day</string>
+    <string name="alarm_end_day">End Day</string>
     <string name="alarm_save">Save</string>
     <string name="alarm_area">Area</string>
 
