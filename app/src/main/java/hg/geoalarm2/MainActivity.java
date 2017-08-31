@@ -104,7 +104,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 addCurrentMarker();
                 resetCamera();
                 hideDetailsMenu();
-                DataManager.saveHashMap("Alarms", Singleton.getInstance().getAlarmsMap());
+                DataManager.saveAlarms();
                 Singleton.getInstance().setCurrentState(NO_MARKER);
             }
         } );
@@ -204,7 +204,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     public void onMapReady(GoogleMap googleMap){
-        HashMap<String, Alarm> alarms = DataManager.getHashMap("Alarms");
+        HashMap<String, Alarm> alarms = DataManager.getAlarms();
 
         Singleton.getInstance().setAlarmsMap(alarms);
 
@@ -233,7 +233,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             @Override
             public boolean onMarkerClick(Marker marker) {
                 hideDetailsMenu();
-                if(Singleton.getInstance().getAlarmsMap().containsKey(getMapKey(Singleton.getInstance().getCurrentMarker()))){
+                if(marker != null && Singleton.getInstance().getAlarmsMap().containsKey(getMapKey(marker))){
                     removeTempMarker();
                     if(!marker.getTitle().equals("Edit")){
                         marker.setTitle("Edit");
@@ -334,8 +334,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private void removeCurrentMarker(){
         if(Singleton.getInstance().getCurrentMarker() != null){
+            Singleton.getInstance().getAlarmsMap().remove(getMapKey(Singleton.getInstance().getCurrentMarker()));
             Singleton.getInstance().getCurrentMarker().remove();
             Singleton.getInstance().setCurrentMarker(null);
+            DataManager.saveAlarms();
         }
         Singleton.getInstance().setCurrentState(NO_MARKER);
     }
@@ -412,7 +414,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private String getMapKey(Marker marker){
-        return marker.getPosition().latitude + "###" + marker.getPosition().longitude;
+        if(marker !=  null){
+            return marker.getPosition().latitude + "###" + marker.getPosition().longitude;
+        }
+        else{
+            return "";
+        }
     }
 
 }

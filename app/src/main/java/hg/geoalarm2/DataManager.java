@@ -12,6 +12,14 @@ import java.util.HashMap;
  */
 
 public class DataManager {
+    public static void saveAlarms(){
+        saveHashMap( "Alarms", Singleton.getInstance().getAlarmsMap());
+    }
+
+    public static  HashMap<String, Alarm> getAlarms(){
+        return getHashMap("Alarms");
+    }
+
     public static void saveHashMap(String key , HashMap<String, Alarm> map) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(Singleton.getInstance().getMainActivity());
         SharedPreferences.Editor editor = prefs.edit();
