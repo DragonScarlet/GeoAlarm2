@@ -30,6 +30,17 @@ public class Time {
     }
 
     public String getStrTime(){
-        return hour + ":" + minutes;
+        return  convertDateIntToString(hour) + ":" +  convertDateIntToString(minutes) + ":00";
+    }
+
+    private String convertDateIntToString(int date){
+        String strDay;
+        if(date < 10){
+            strDay = "0" + date;
+        }
+        else{
+            strDay = "" + date;
+        }
+        return strDay;
     }
 }

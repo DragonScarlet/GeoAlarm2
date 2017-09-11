@@ -37,12 +37,12 @@ public class TimePickerFragment extends DialogFragment
         // Do something with the time chosen by the user
         Time time = new Time(hourOfDay, minute);
         if(Singleton.getInstance().getCurrentState().equals(CREATE_START_TIME)){
-            Singleton.getInstance().getCurrentAlarm().setStartTime(time);
+            Singleton.getInstance().getCacheAlarm().setStartTime(time);
             Button btn = Singleton.getInstance().getMainActivity().findViewById(R.id.button_start_time);
             btn.setText(time.getStrTime());
         }
         else{
-            Singleton.getInstance().getCurrentAlarm().setEndTime(time);
+            Singleton.getInstance().getCacheAlarm().setEndTime(time);
             Button btn = Singleton.getInstance().getMainActivity().findViewById(R.id.button_end_time);
             btn.setText(time.getStrTime());
         }

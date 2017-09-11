@@ -25,7 +25,7 @@ public class DataManager {
         SharedPreferences.Editor editor = prefs.edit();
         Gson gson = new Gson();
         MapWrapper wrapper = new MapWrapper();
-        wrapper.setmMap(map);
+        wrapper.setMap(map);
         String serializedMap = gson.toJson(wrapper);
         editor.putString(key,serializedMap);
         editor.apply();
@@ -38,8 +38,8 @@ public class DataManager {
             Type type = new TypeToken<MapWrapper>(){}.getType();
             String json = prefs.getString(key,"");
             MapWrapper wrapper = gson.fromJson(json, type);
-            if( wrapper.getmMap() != null){
-                return wrapper.getmMap();
+            if( wrapper.getMap() != null){
+                return wrapper.getMap();
             }
         }
         catch (Exception e) {

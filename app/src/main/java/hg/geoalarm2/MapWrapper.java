@@ -11,11 +11,11 @@ import java.util.HashMap;
 public class MapWrapper {
     private HashMap<String, Alarm> mMap;
 
-    public HashMap<String, Alarm> getmMap() {
+    public HashMap<String, Alarm> getMap() {
         return mMap;
     }
 
-    public void setmMap(HashMap<String, Alarm> mMap) {
+    public void setMap(HashMap<String, Alarm> mMap) {
         this.mMap = mMap;
     }
 }

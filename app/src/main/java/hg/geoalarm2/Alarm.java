@@ -12,23 +12,33 @@ public class Alarm {
         SINGLE, MULTIPLE, AREA_ONLY
     }
 
-    public enum Weekdays {
-        MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY
-    }
-
     private String name;
     private Time startTime;
     private Time endTime;
     private Date startDay;
     private Date endDay;
-    private float radius;
+    private int radius;
     private boolean active;
     private type type;
-    private Weekdays[] weekdays;
+    private Week week;
     private double latitude;
     private double longitude;
 
-    public Alarm(String name, Time startTime, Time endTime, Date startDay, Date endDay, float radius, boolean active, Alarm.type type, Weekdays[] weekdays, double latitude, double longitude) {
+    public Alarm(){
+        this.name = "";
+        this.startTime = null;
+        this.endTime = null;
+        this.startDay = null;
+        this.endDay = null;
+        this.radius = 0;
+        this.active = false;
+        this.type = null;
+        this.week = null;
+        this.latitude = 0;
+        this.longitude = 0;
+    }
+
+    public Alarm(String name, Time startTime, Time endTime, Date startDay, Date endDay, int radius, boolean active, Alarm.type type, Week week, double latitude, double longitude) {
         this.name = name;
         this.startTime = startTime;
         this.endTime = endTime;
@@ -37,7 +47,7 @@ public class Alarm {
         this.radius = radius;
         this.active = active;
         this.type = type;
-        this.weekdays = weekdays;
+        this.week = week;
         this.latitude = latitude;
         this.longitude = longitude;
     }
@@ -82,11 +92,11 @@ public class Alarm {
         this.endDay = endDay;
     }
 
-    public float getRadius() {
+    public int getRadius() {
         return radius;
     }
 
-    public void setRadius(float radius) {
+    public void setRadius(int radius) {
         this.radius = radius;
     }
 
@@ -106,12 +116,12 @@ public class Alarm {
         this.type = type;
     }
 
-    public Weekdays[] getWeekdays() {
-        return weekdays;
+    public Week getWeek() {
+        return week;
     }
 
-    public void setWeekdays(Weekdays[] weekdays) {
-        this.weekdays = weekdays;
+    public void setWeek(Week week) {
+        this.week = week;
     }
 
     public double getLatitude() {

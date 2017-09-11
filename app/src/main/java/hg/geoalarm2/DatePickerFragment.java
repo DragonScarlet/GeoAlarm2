@@ -28,14 +28,14 @@ public class DatePickerFragment extends DialogFragment
     }
 
     public void onDateSet(DatePicker view, int year, int month, int day) {
-        Date date = new Date(year, month, day);
+        Date date = new Date(year, month+1, day);
         if(Singleton.getInstance().getCurrentState().equals(State.CREATE_START_DAY)){
-            Singleton.getInstance().getCurrentAlarm().setStartDay(date);
+            Singleton.getInstance().getCacheAlarm().setStartDay(date);
             Button btn = Singleton.getInstance().getMainActivity().findViewById(R.id.button_start_day);
             btn.setText(date.getStrDate());
         }
         else{
-            Singleton.getInstance().getCurrentAlarm().setEndDay(date);
+            Singleton.getInstance().getCacheAlarm().setEndDay(date);
             Button btn = Singleton.getInstance().getMainActivity().findViewById(R.id.button_end_day);
             btn.setText(date.getStrDate());
         }

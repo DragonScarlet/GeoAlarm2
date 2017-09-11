@@ -18,7 +18,8 @@ public final class Singleton {
     private static volatile Singleton instance = null;
     private Singleton() {}
     private Marker currentMarker;
-    private Alarm currentAlarm = new Alarm("",null,null,null,null, 0, false, null, null, 0, 0);
+    private Alarm currentAlarm = new Alarm();
+    private Alarm cacheAlarm = new Alarm();
     private State currentState;
     private Activity mainActivity;
     private HashMap<String, Alarm> alarmsMap;
@@ -83,5 +84,13 @@ public final class Singleton {
 
     public void setAlarmsMap(HashMap<String, Alarm> alarmsMap) {
         this.alarmsMap = alarmsMap;
+    }
+
+    public Alarm getCacheAlarm() {
+        return cacheAlarm;
+    }
+
+    public void setCacheAlarm(Alarm cacheAlarm) {
+        this.cacheAlarm = cacheAlarm;
     }
 }

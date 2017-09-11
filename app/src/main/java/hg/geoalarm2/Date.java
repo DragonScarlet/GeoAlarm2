@@ -40,6 +40,17 @@ public class Date {
     }
 
     public String getStrDate(){
-        return day + "." + month + "." + year;
+        return convertDateIntToString(day) + "." + convertDateIntToString(month) + "." + year;
+    }
+
+    private String convertDateIntToString(int date){
+        String strDay;
+        if(date < 10){
+            strDay = "0" + date;
+        }
+        else{
+            strDay = "" + date;
+        }
+        return strDay;
     }
 }

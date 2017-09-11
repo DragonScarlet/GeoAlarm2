@@ -104,6 +104,7 @@
 
 
     <RadioGroup
+        android:id="@+id/radio_group_selection"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
