@@ -1,4 +1,4 @@
-package hg.geoalarm2;
+package hg.geoalarm2.fragments;
 
 import android.app.DatePickerDialog;
 import android.app.Dialog;
@@ -7,6 +7,11 @@ import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.widget.Button;
 import android.widget.DatePicker;
+
+import hg.geoalarm2.objects.time.Date;
+import hg.geoalarm2.R;
+import hg.geoalarm2.utils.Singleton;
+import hg.geoalarm2.enums.State;
 
 /**
  * Created by dimkn on 8/23/2017.

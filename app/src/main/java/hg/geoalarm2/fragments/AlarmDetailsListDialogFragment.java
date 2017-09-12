@@ -1,4 +1,4 @@
-package hg.geoalarm2;
+package hg.geoalarm2.fragments;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -11,6 +11,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
+import hg.geoalarm2.R;
 
 /**
  * <p>A fragment that shows a list of items as a modal bottom sheet.</p>

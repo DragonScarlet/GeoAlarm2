@@ -1,4 +1,4 @@
-package hg.geoalarm2;
+package hg.geoalarm2.fragments;
 
 import android.app.Dialog;
 import android.support.v4.app.DialogFragment;
@@ -9,10 +9,12 @@ import android.text.format.DateFormat;
 import android.widget.Button;
 import android.widget.TimePicker;
 
-import java.sql.Date;
+import hg.geoalarm2.R;
+import hg.geoalarm2.utils.Singleton;
+import hg.geoalarm2.objects.time.Time;
 
-import static hg.geoalarm2.State.CREATE;
-import static hg.geoalarm2.State.CREATE_START_TIME;
+import static hg.geoalarm2.enums.State.CREATE;
+import static hg.geoalarm2.enums.State.CREATE_START_TIME;
 
 /**
  * Created by dimkn on 8/23/2017.

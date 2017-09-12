@@ -1,6 +1,10 @@
-package hg.geoalarm2;
+package hg.geoalarm2.objects.alarm;
 
 import com.google.android.gms.maps.model.LatLng;
+
+import hg.geoalarm2.objects.time.Date;
+import hg.geoalarm2.objects.time.Time;
+import hg.geoalarm2.objects.time.Week;
 
 /**
  * Created by dimkn on 7/20/2017.

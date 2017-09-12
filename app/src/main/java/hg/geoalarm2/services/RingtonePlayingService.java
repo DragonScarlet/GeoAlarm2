@@ -1,4 +1,4 @@
-package hg.geoalarm2;
+package hg.geoalarm2.services;
 
 import android.app.Notification;
 import android.app.Service;
@@ -8,6 +8,8 @@ import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.util.Log;
 import android.widget.Toast;
+
+import hg.geoalarm2.R;
 
 /**
  * Created by dimkn on 9/7/2017.
@@ -23,11 +25,6 @@ public class RingtonePlayingService extends Service {
 
         media_song = MediaPlayer.create(this, R.raw.persona5);
         media_song.start();
-        // For each start request, send a message to start a job and deliver the
-        // start ID so we know which request we're stopping when we finish the job
-//        Notification.MessagingStyle.Message msg = mServiceHandler.obtainMessage();
-//        msg.arg1 = startId;
-//        mServiceHandler.sendMessage(msg);
 
         // If we get killed, after returning from here, restart
         return START_STICKY;

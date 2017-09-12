@@ -7,5 +7,5 @@
     android:clipToPadding="false"
     android:paddingBottom="@dimen/list_item_spacing_half"
     android:paddingTop="@dimen/list_item_spacing_half"
-    tools:context="hg.geoalarm2.AlarmDetailsListDialogFragment"
+    tools:context="hg.geoalarm2.fragments.AlarmDetailsListDialogFragment"
     tools:listitem="@layout/fragment_alarmdetails_list_dialog_item" />

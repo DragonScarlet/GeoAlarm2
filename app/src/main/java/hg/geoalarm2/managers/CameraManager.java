@@ -1,9 +1,9 @@
-package hg.geoalarm2;
+package hg.geoalarm2.managers;
 
-import com.google.android.gms.maps.CameraUpdateFactory;
-import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+
+import hg.geoalarm2.utils.Singleton;
 
 /**
  * Created by dimkn on 8/18/2017.

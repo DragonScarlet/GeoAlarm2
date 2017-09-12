@@ -1,4 +1,4 @@
-package hg.geoalarm2;
+package hg.geoalarm2.activities;
 
 
 import android.app.AlarmManager;
@@ -41,15 +41,28 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import java.text.ParseException;
 import java.util.HashMap;
 
-import static hg.geoalarm2.AlarmHelper.testAlarm;
-import static hg.geoalarm2.State.CREATE;
-import static hg.geoalarm2.State.CREATE_END_DAY;
-import static hg.geoalarm2.State.CREATE_END_TIME;
-import static hg.geoalarm2.State.CREATE_START_DAY;
-import static hg.geoalarm2.State.CREATE_START_TIME;
-import static hg.geoalarm2.State.EDIT;
-import static hg.geoalarm2.State.NO_MARKER;
-import static hg.geoalarm2.State.REMOVE;
+import hg.geoalarm2.objects.alarm.Alarm;
+import hg.geoalarm2.fragments.AlarmDetailsListDialogFragment;
+import hg.geoalarm2.receivers.AlarmReceiver;
+import hg.geoalarm2.managers.DataManager;
+import hg.geoalarm2.objects.time.Date;
+import hg.geoalarm2.fragments.DatePickerFragment;
+import hg.geoalarm2.R;
+import hg.geoalarm2.utils.Singleton;
+import hg.geoalarm2.objects.time.Time;
+import hg.geoalarm2.fragments.TimePickerFragment;
+import hg.geoalarm2.objects.time.Week;
+import hg.geoalarm2.managers.AnimationManager;
+import hg.geoalarm2.managers.CameraManager;
+
+import static hg.geoalarm2.enums.State.CREATE;
+import static hg.geoalarm2.enums.State.CREATE_END_DAY;
+import static hg.geoalarm2.enums.State.CREATE_END_TIME;
+import static hg.geoalarm2.enums.State.CREATE_START_DAY;
+import static hg.geoalarm2.enums.State.CREATE_START_TIME;
+import static hg.geoalarm2.enums.State.EDIT;
+import static hg.geoalarm2.enums.State.NO_MARKER;
+import static hg.geoalarm2.enums.State.REMOVE;
 
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, AlarmDetailsListDialogFragment.Listener {
@@ -124,7 +137,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     hideDetailsMenu();
                     DataManager.saveAlarms();
                     Singleton.getInstance().setCurrentState(NO_MARKER);
-                    Intent my_intent = new Intent(context, Alarm_Receiver.class);
+                    Intent my_intent = new Intent(context, AlarmReceiver.class);
                     final int _id = (int) System.currentTimeMillis();
                     pendingIntent = PendingIntent.getBroadcast(MainActivity.this, _id, my_intent, PendingIntent.FLAG_ONE_SHOT);
                     try {

@@ -1,13 +1,14 @@
-package hg.geoalarm2;
+package hg.geoalarm2.utils;
 
 import android.app.Activity;
-import android.view.View;
 
 import com.google.android.gms.maps.model.CameraPosition;
-import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 
 import java.util.HashMap;
+
+import hg.geoalarm2.enums.State;
+import hg.geoalarm2.objects.alarm.Alarm;
 
 /**
  * Created by dimkn on 7/18/2017.

@@ -1,4 +1,4 @@
-package hg.geoalarm2;
+package hg.geoalarm2.objects.time;
 
 /**
  * Created by dimkn on 9/1/2017.

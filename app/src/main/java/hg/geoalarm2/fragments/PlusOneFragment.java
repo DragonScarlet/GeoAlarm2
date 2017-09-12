@@ -1,4 +1,4 @@
-package hg.geoalarm2;
+package hg.geoalarm2.fragments;
 
 import android.content.Context;
 import android.net.Uri;
@@ -9,6 +9,8 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.google.android.gms.plus.PlusOneButton;
+
+import hg.geoalarm2.R;
 
 /**
  * A fragment with a Google +1 button.

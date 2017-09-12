@@ -1,4 +1,4 @@
-package hg.geoalarm2;
+package hg.geoalarm2.enums;
 
 /**
  * Created by dimkn on 8/25/2017.

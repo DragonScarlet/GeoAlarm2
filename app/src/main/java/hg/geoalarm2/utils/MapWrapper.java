@@ -1,8 +1,8 @@
-package hg.geoalarm2;
-
-import com.google.android.gms.maps.model.LatLng;
+package hg.geoalarm2.utils;
 
 import java.util.HashMap;
+
+import hg.geoalarm2.objects.alarm.Alarm;
 
 /**
  * Created by dimkn on 8/27/2017.

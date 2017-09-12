@@ -1,4 +1,4 @@
-package hg.geoalarm2;
+package hg.geoalarm2.managers;
 
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
@@ -6,6 +6,10 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import java.lang.reflect.Type;
 import java.util.HashMap;
+
+import hg.geoalarm2.objects.alarm.Alarm;
+import hg.geoalarm2.utils.MapWrapper;
+import hg.geoalarm2.utils.Singleton;
 
 /**
  * Created by dimkn on 8/25/2017.
