@@ -1,12 +1,9 @@
 package hg.geoalarm2.services;
 
-import android.app.Notification;
 import android.app.Service;
 import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.IBinder;
-import android.support.annotation.Nullable;
-import android.util.Log;
 import android.widget.Toast;
 
 import hg.geoalarm2.R;
@@ -25,6 +22,21 @@ public class RingtonePlayingService extends Service {
 
         media_song = MediaPlayer.create(this, R.raw.persona5);
         media_song.start();
+
+//        Geofence geofence = new Geofence.Builder()
+//                .setRequestId(startId)
+//                .setCircularRegion(
+//                        entry.getValue().latitude,
+//                        entry.getValue().longitude,
+//                        Constants.GEOFENCE_RADIUS_IN_METERS
+//                )
+//                .setExpirationDuration(Constants.GEOFENCE_EXPIRATION_IN_MILLISECONDS)
+//                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER |
+//                        Geofence.GEOFENCE_TRANSITION_EXIT)
+//                .build();
+
+
+
 
         // If we get killed, after returning from here, restart
         return START_STICKY;

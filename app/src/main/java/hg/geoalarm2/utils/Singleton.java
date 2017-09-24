@@ -1,7 +1,10 @@
 package hg.geoalarm2.utils;
 
 import android.app.Activity;
+import android.app.PendingIntent;
 
+import com.google.android.gms.location.Geofence;
+import com.google.android.gms.location.GeofencingClient;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.Marker;
 
@@ -24,7 +27,28 @@ public final class Singleton {
     private State currentState;
     private Activity mainActivity;
     private HashMap<String, Alarm> alarmsMap;
+    private HashMap<String, Geofence> geofenceMap = new HashMap<>();
 
+
+    // Geofence
+    private GeofencingClient geofencingClient;
+    private PendingIntent geofencePendingIntent;
+
+    public GeofencingClient getGeofencingClient() {
+        return geofencingClient;
+    }
+
+    public void setGeofencingClient(GeofencingClient geofencingClient) {
+        this.geofencingClient = geofencingClient;
+    }
+
+    public PendingIntent getGeofencePendingIntent() {
+        return geofencePendingIntent;
+    }
+
+    public void setGeofencePendingIntent(PendingIntent geofencePendingIntent) {
+        this.geofencePendingIntent = geofencePendingIntent;
+    }
 
     private CameraPosition oldCameraPosition;
 
@@ -93,5 +117,13 @@ public final class Singleton {
 
     public void setCacheAlarm(Alarm cacheAlarm) {
         this.cacheAlarm = cacheAlarm;
+    }
+
+    public HashMap<String, Geofence> getGeofenceMap() {
+        return geofenceMap;
+    }
+
+    public void setGeofenceMap(HashMap<String, Geofence> geofenceMap) {
+        this.geofenceMap = geofenceMap;
     }
 }
