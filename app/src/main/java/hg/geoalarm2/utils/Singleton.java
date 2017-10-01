@@ -6,6 +6,7 @@ import android.app.PendingIntent;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingClient;
 import com.google.android.gms.maps.model.CameraPosition;
+import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.Marker;
 
 import java.util.HashMap;
@@ -28,6 +29,7 @@ public final class Singleton {
     private Activity mainActivity;
     private HashMap<String, Alarm> alarmsMap;
     private HashMap<String, Geofence> geofenceMap = new HashMap<>();
+    private Circle circle = null;
 
 
     // Geofence
@@ -125,5 +127,13 @@ public final class Singleton {
 
     public void setGeofenceMap(HashMap<String, Geofence> geofenceMap) {
         this.geofenceMap = geofenceMap;
+    }
+
+    public Circle getCircle() {
+        return circle;
+    }
+
+    public void setCircle(Circle circle) {
+        this.circle = circle;
     }
 }

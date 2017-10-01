@@ -20,9 +20,8 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
-import android.widget.RadioButton;
-import android.widget.RadioGroup;
 import android.widget.SeekBar;
+import android.widget.Switch;
 import android.widget.Toast;
 
 import com.google.android.gms.location.LocationServices;
@@ -34,6 +33,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -74,7 +74,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private Context context;
     private AlarmManager alarmManager;
     private PendingIntent pendingIntent;
-    int MY_PERMISSIONS_REQUEST_READ_CONTACTS = 0;
+    int seekBarOffset = 50;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -166,9 +166,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         });
 
-        RadioButton radio1 = (RadioButton) findViewById(R.id.radio_single);
-        radio1.setChecked(true);
-
         // Create an ArrayAdapter using the string array and a default spinner layout
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
                 R.array.planets_array, android.R.layout.simple_spinner_item);
@@ -176,17 +173,46 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         // Apply the adapter to the spinner
 
+
+        SeekBar seekBar = (SeekBar) findViewById(R.id.seekBar_alarm_area);
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                // TODO Auto-generated method stub
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                // TODO Auto-generated method stub
+            }
+
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                // TODO Auto-generated method stub
+                paintCircle((progress+1) * seekBarOffset);
+                zoomWithStyte(Singleton.getInstance().getCurrentMarker().getPosition(), progress);
+            }
+        });
+
         Singleton.getInstance().setCurrentState(NO_MARKER);
     }
 
     private void hideDetailsMenu() {
-        AnimationManager.hideDetailsMenu(this);
+        AnimationManager.hideDetailsMenu(this, mMap);
+        removeCircle();
     }
 
     private void showDetailsMenu(Marker marker) {
         Alarm alarm = Singleton.getInstance().getAlarmsMap().get(getMapKey(marker));
         setAlarmDetails(alarm);
-        AnimationManager.showDetailsMenu(this);
+        AnimationManager.showDetailsMenu(this, mMap);
+        if(alarm != null){
+            moveWithStyleToPosition(Singleton.getInstance().getCurrentMarker().getPosition(), alarm.getRadius());
+        }
+        else{
+            moveWithStyleToPosition(Singleton.getInstance().getCurrentMarker().getPosition(), 5000);
+        }
     }
 
 
@@ -195,7 +221,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             EditText alarmName = (EditText) findViewById(R.id.edit_alarm_name);
             alarmName.setText(alarm.getName());
             SeekBar seekBar = (SeekBar) findViewById(R.id.seekBar_alarm_area);
-            seekBar.setProgress(alarm.getRadius());
+            int progress = alarm.getRadius()/50;
+
+            seekBar.setProgress(progress);
+
             CheckBox monday = (CheckBox) findViewById(R.id.checkbox_monday);
             monday.setChecked(alarm.getWeek().isMonday());
             CheckBox tuesday = (CheckBox) findViewById(R.id.checkbox_tuesday);
@@ -210,11 +239,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             saturday.setChecked(alarm.getWeek().isSaturday());
             CheckBox sunday = (CheckBox) findViewById(R.id.checkbox_sunday);
             sunday.setChecked(alarm.getWeek().isSunday());
-            RadioButton radioButton = (RadioButton) findViewById(R.id.radio_single);
-            if (alarm.getType().equals(Alarm.type.MULTIPLE)) {
-                radioButton = (RadioButton) findViewById(R.id.radio_multiple);
-            }
-            radioButton.setChecked(true);
             Button btnStartTime = (Button) findViewById(R.id.button_start_time);
             if (alarm.getStartTime() != null) {
                 btnStartTime.setText(alarm.getStartTime().getStrTime());
@@ -235,6 +259,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 btnEndDay.setText(alarm.getEndDay().getStrDate());
                 Singleton.getInstance().getCacheAlarm().setEndDay(alarm.getEndDay());
             }
+            paintCircle(alarm.getRadius());
         } else {
             EditText alarmName = (EditText) findViewById(R.id.edit_alarm_name);
             alarmName.setText("");
@@ -254,8 +279,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             saturday.setChecked(false);
             CheckBox sunday = (CheckBox) findViewById(R.id.checkbox_sunday);
             sunday.setChecked(false);
-            RadioButton radioButton = (RadioButton) findViewById(R.id.radio_single);
-            radioButton.setChecked(true);
             Button btnStartTime = (Button) findViewById(R.id.button_start_time);
             btnStartTime.setText("set time");
             Button btnEndTime = (Button) findViewById(R.id.button_end_time);
@@ -264,6 +287,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             btnStartDay.setText("set time");
             Button btnEndDay = (Button) findViewById(R.id.button_end_day);
             btnEndDay.setText("set time");
+            paintCircle(50);
         }
     }
 
@@ -358,12 +382,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
             @Override
             public void onInfoWindowClick(Marker marker) {
+                if(Singleton.getInstance().getOldCameraPosition() != null){
+                    resetCamera();
+                }
                 switch (Singleton.getInstance().getCurrentState()) {
                     case CREATE:
                         Singleton.getInstance().setCacheAlarm(new Alarm());
                         Singleton.getInstance().setOldCameraPosition(mMap.getCameraPosition());
                         showDetailsMenu(marker);
-                        moveWithStyleToPosition(Singleton.getInstance().getCurrentMarker().getPosition());
                         break;
                     case REMOVE:
                         removeCurrentMarker();
@@ -372,7 +398,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         Singleton.getInstance().setOldCameraPosition(mMap.getCameraPosition());
                         removeTempMarker();
                         showDetailsMenu(marker);
-                        moveWithStyleToPosition(Singleton.getInstance().getCurrentMarker().getPosition());
                         break;
                     default:
                         break;
@@ -383,8 +408,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode,
-                                           String permissions[], int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
         switch (requestCode) {
             case 1: {
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -401,8 +425,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     }
 
-    private void moveWithStyleToPosition(LatLng latLng) {
-        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(CameraManager.getCameraPositionWithStyle(latLng)));
+    private void moveWithStyleToPosition(LatLng latLng, int radius) {
+        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(CameraManager.getCameraPositionWithStyle(latLng, radius)));
+    }
+
+    private void zoomWithStyte(LatLng latLng, int progress) {
+        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(CameraManager.getCameraPositionWhileZooming(latLng, progress)));
     }
 
     private void resetCamera() {
@@ -422,7 +450,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private void handelNewMarker(LatLng point) {
         removeTempMarker();
-//        deleteCurrentMarker();
+        removeCircle();
         createMarker(point);
     }
 
@@ -433,14 +461,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-    private void handelNoMarker(LatLng point) {
-        createMarker(point);
-    }
-
     private void createMarker(LatLng point) {
         Marker tmp = mMap.addMarker(new MarkerOptions().position(point).title("Create New Alarm"));
         Singleton.getInstance().setCurrentMarker(tmp);
-        //FloatingActionButton addButton = (FloatingActionButton) findViewById(R.id.addButton);
     }
 
     private void removeCurrentMarker() {
@@ -451,6 +474,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             DataManager.saveAlarms();
         }
         Singleton.getInstance().setCurrentState(NO_MARKER);
+        resetCamera();
     }
 
     private String addCurrentMarker() {
@@ -458,22 +482,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         if (Singleton.getInstance().getCurrentMarker() != null) {
             EditText alarmName = (EditText) findViewById(R.id.edit_alarm_name);
             SeekBar seekBar = (SeekBar) findViewById(R.id.seekBar_alarm_area);
-            Singleton.getInstance().getCurrentAlarm().setRadius(seekBar.getProgress());
+            int radius = seekBar.getProgress() * 50;
+            Singleton.getInstance().getCurrentAlarm().setRadius(radius);
             Singleton.getInstance().getCurrentAlarm().setLatitude(Singleton.getInstance().getCurrentMarker().getPosition().latitude);
             Singleton.getInstance().getCurrentAlarm().setLongitude(Singleton.getInstance().getCurrentMarker().getPosition().longitude);
-
-            RadioGroup radioGroup = (RadioGroup) findViewById(R.id.radio_group_selection);
-            int selectedId = radioGroup.getCheckedRadioButtonId();
-            RadioButton radioButton = (RadioButton) findViewById(selectedId);
-
             Alarm.type type = Alarm.type.SINGLE;
-            if (radioButton.getText().equals("Multiple")) {
-                type = Alarm.type.MULTIPLE;
-            }
-
-            int radius = seekBar.getProgress() + 100;
-
-
             Alarm alarm = new Alarm(
                     alarmName.getText().toString(),
                     Singleton.getInstance().getCacheAlarm().getStartTime(),
@@ -519,32 +532,22 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         toast.show();
     }
 
-    public void onRadioButtonClicked(View view) {
-        // Is the button now checked?
-        boolean checked = ((RadioButton) view).isChecked();
-
-        // Check which radio button was clicked
-        switch (view.getId()) {
-            case R.id.radio_single:
-                if (checked) {
-                    notifyMe("Single");
-                }
-                // Pirates are the best
-                break;
-            case R.id.radio_multiple:
-                if (checked) {
-                    notifyMe("Multiple");
-                }
-                break;
-        }
-    }
-
     public void onCheckboxClicked(View view) {
         switch (view.getId()) {
             case R.id.checkbox_monday:
                 break;
             case R.id.checkbox_tuesday:
                 break;
+        }
+    }
+
+    public void onSwitchClicked(View view) {
+        View weekdays = findViewById(R.id.weekdays);
+        Switch switchView = (Switch) findViewById(R.id.switch_multiple_times);
+        if (switchView.isChecked()) {
+            weekdays.setVisibility(View.VISIBLE);
+        } else {
+            weekdays.setVisibility(View.GONE);
         }
     }
 
@@ -565,5 +568,22 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             return "";
         }
     }
+
+    private void paintCircle(int radius){
+        removeCircle();
+        Singleton.getInstance().setCircle(mMap.addCircle(new CircleOptions()
+                .center(Singleton.getInstance().getCurrentMarker().getPosition())
+                .radius(radius)
+                .strokeColor(0x220000FF)
+                .fillColor(0x220000FF)));
+
+    }
+
+    private void removeCircle(){
+        if(Singleton.getInstance().getCircle() != null){
+            Singleton.getInstance().getCircle().remove();
+        }
+    }
+
 
 }
