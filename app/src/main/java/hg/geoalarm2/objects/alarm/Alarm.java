@@ -147,4 +147,8 @@ public class Alarm {
     public LatLng getLatLng(){
         return new LatLng(latitude, longitude);
     }
+
+    public void toogleAlarm(){
+        active = !active;
+    }
 }

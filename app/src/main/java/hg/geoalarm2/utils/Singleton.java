@@ -136,4 +136,13 @@ public final class Singleton {
     public void setCircle(Circle circle) {
         this.circle = circle;
     }
+
+
+    public String getMapKey(Marker marker) {
+        if (marker != null) {
+            return marker.getPosition().latitude + "###" + marker.getPosition().longitude;
+        } else {
+            return "";
+        }
+    }
 }

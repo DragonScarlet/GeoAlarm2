@@ -12,7 +12,6 @@ import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -45,6 +44,7 @@ import hg.geoalarm2.R;
 import hg.geoalarm2.fragments.AlarmDetailsListDialogFragment;
 import hg.geoalarm2.fragments.DatePickerFragment;
 import hg.geoalarm2.fragments.TimePickerFragment;
+import hg.geoalarm2.helpers.InfoWindowAdapterHelper;
 import hg.geoalarm2.managers.AnimationManager;
 import hg.geoalarm2.managers.CameraManager;
 import hg.geoalarm2.managers.DataManager;
@@ -53,6 +53,7 @@ import hg.geoalarm2.objects.time.Date;
 import hg.geoalarm2.objects.time.Time;
 import hg.geoalarm2.objects.time.Week;
 import hg.geoalarm2.receivers.AlarmReceiver;
+import hg.geoalarm2.utils.MapUtils;
 import hg.geoalarm2.utils.Singleton;
 
 import static hg.geoalarm2.constants.mainActivityConstants.INTENT_MAP_KEY;
@@ -64,17 +65,19 @@ import static hg.geoalarm2.enums.State.CREATE_START_TIME;
 import static hg.geoalarm2.enums.State.EDIT;
 import static hg.geoalarm2.enums.State.NO_MARKER;
 import static hg.geoalarm2.enums.State.REMOVE;
+import static hg.geoalarm2.enums.State.STATUS;
 
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, AlarmDetailsListDialogFragment.Listener {
-
-    private boolean hide = true;
     private GoogleMap mMap;
-    public Log log;
-    private Context context;
+    private Context mContext;
     private AlarmManager alarmManager;
     private PendingIntent pendingIntent;
     int seekBarOffset = 50;
+
+    //Constants
+    private final int RADIUS_STEP = 50;
+    private final String DATE_FORMAT = "dd.MM.yyyy HH:mm:ss";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,23 +86,34 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         Singleton.getInstance().setMainActivity(this);
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
-        this.context = this;
-
+        this.mContext = this;
         alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
-
         Singleton.getInstance().setGeofencePendingIntent(null);
         Singleton.getInstance().setGeofencingClient(LocationServices.getGeofencingClient(this));
-
-
         mapFragment.getMapAsync(this);
         hideDetailsMenu();
+        // Create an ArrayAdapter using the string array and a default spinner layout
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+                R.array.planets_array, android.R.layout.simple_spinner_item);
+        // Specify the layout to use when the list of choices appears
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        // Apply the adapter to the spinner
+        initAllListeners();
+        Singleton.getInstance().setCurrentState(NO_MARKER);
+    }
+
+
+    private void initAllListeners() {
+        initCreateButton();
+        initTimers();
+        initSeekBar();
+    }
+
+    private void initCreateButton() {
         final Button createButton = (Button) findViewById(R.id.createButton);
-
-
         ActivityCompat.requestPermissions(MainActivity.this,
                 new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                 1);
-
         createButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -109,14 +123,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     hideDetailsMenu();
                     DataManager.saveAlarms();
                     Singleton.getInstance().setCurrentState(NO_MARKER);
-                    Intent my_intent = new Intent(context, AlarmReceiver.class);
+                    Intent my_intent = new Intent(mContext, AlarmReceiver.class);
                     my_intent.putExtra(INTENT_MAP_KEY, key);
                     final int _id = (int) System.currentTimeMillis();
                     pendingIntent = PendingIntent.getBroadcast(MainActivity.this, _id, my_intent, PendingIntent.FLAG_ONE_SHOT);
                     try {
                         Date date = Singleton.getInstance().getCacheAlarm().getStartDay();
                         Time time = Singleton.getInstance().getCacheAlarm().getStartTime();
-                        SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+                        SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
                         String strDate = date.getStrDate() + " " + time.getStrTime();
                         java.util.Date parsedDate = sdf.parse(strDate);
                         long millis = parsedDate.getTime();
@@ -129,7 +143,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 }
             }
         });
+    }
 
+    private void initTimers() {
         Button btnStartTime = (Button) findViewById(R.id.button_start_time);
         btnStartTime.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -165,15 +181,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 showDatePickerDialog(view);
             }
         });
+    }
 
-        // Create an ArrayAdapter using the string array and a default spinner layout
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
-                R.array.planets_array, android.R.layout.simple_spinner_item);
-        // Specify the layout to use when the list of choices appears
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        // Apply the adapter to the spinner
-
-
+    private void initSeekBar() {
         SeekBar seekBar = (SeekBar) findViewById(R.id.seekBar_alarm_area);
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
 
@@ -190,12 +200,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 // TODO Auto-generated method stub
-                paintCircle((progress+1) * seekBarOffset);
-                zoomWithStyte(Singleton.getInstance().getCurrentMarker().getPosition(), progress);
+                paintCircle((progress + 1) * seekBarOffset);
+                zoomWithStyle(Singleton.getInstance().getCurrentMarker().getPosition(), progress);
             }
         });
-
-        Singleton.getInstance().setCurrentState(NO_MARKER);
     }
 
     private void hideDetailsMenu() {
@@ -204,90 +212,74 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private void showDetailsMenu(Marker marker) {
-        Alarm alarm = Singleton.getInstance().getAlarmsMap().get(getMapKey(marker));
+        Alarm alarm = Singleton.getInstance().getAlarmsMap().get(MapUtils.getMapKey(marker));
         setAlarmDetails(alarm);
         AnimationManager.showDetailsMenu(this, mMap);
-        if(alarm != null){
+        if (alarm != null) {
             moveWithStyleToPosition(Singleton.getInstance().getCurrentMarker().getPosition(), alarm.getRadius());
-        }
-        else{
+        } else {
             moveWithStyleToPosition(Singleton.getInstance().getCurrentMarker().getPosition(), 5000);
         }
     }
 
 
     private void setAlarmDetails(Alarm alarm) {
+        EditText alarmName = (EditText) findViewById(R.id.edit_alarm_name);
+        CheckBox monday = (CheckBox) findViewById(R.id.checkbox_monday);
+        CheckBox tuesday = (CheckBox) findViewById(R.id.checkbox_tuesday);
+        CheckBox wednesday = (CheckBox) findViewById(R.id.checkbox_wednesday);
+        CheckBox thursday = (CheckBox) findViewById(R.id.checkbox_thursday);
+        CheckBox friday = (CheckBox) findViewById(R.id.checkbox_friday);
+        CheckBox saturday = (CheckBox) findViewById(R.id.checkbox_saturday);
+        CheckBox sunday = (CheckBox) findViewById(R.id.checkbox_sunday);
+        SeekBar seekBar = (SeekBar) findViewById(R.id.seekBar_alarm_area);
+        Button btnStartTime = (Button) findViewById(R.id.button_start_time);
+        Button btnEndTime = (Button) findViewById(R.id.button_end_time);
+        Button btnStartDay = (Button) findViewById(R.id.button_start_day);
+        Button btnEndDay = (Button) findViewById(R.id.button_end_day);
         if (alarm != null) {
-            EditText alarmName = (EditText) findViewById(R.id.edit_alarm_name);
             alarmName.setText(alarm.getName());
-            SeekBar seekBar = (SeekBar) findViewById(R.id.seekBar_alarm_area);
-            int progress = alarm.getRadius()/50;
-
+            int progress = alarm.getRadius() / RADIUS_STEP;
             seekBar.setProgress(progress);
-
-            CheckBox monday = (CheckBox) findViewById(R.id.checkbox_monday);
             monday.setChecked(alarm.getWeek().isMonday());
-            CheckBox tuesday = (CheckBox) findViewById(R.id.checkbox_tuesday);
             tuesday.setChecked(alarm.getWeek().isTuesday());
-            CheckBox wednesday = (CheckBox) findViewById(R.id.checkbox_wednesday);
             wednesday.setChecked(alarm.getWeek().isWednesday());
-            CheckBox thursday = (CheckBox) findViewById(R.id.checkbox_thursday);
             thursday.setChecked(alarm.getWeek().isThursday());
-            CheckBox friday = (CheckBox) findViewById(R.id.checkbox_friday);
             friday.setChecked(alarm.getWeek().isFriday());
-            CheckBox saturday = (CheckBox) findViewById(R.id.checkbox_saturday);
             saturday.setChecked(alarm.getWeek().isSaturday());
-            CheckBox sunday = (CheckBox) findViewById(R.id.checkbox_sunday);
             sunday.setChecked(alarm.getWeek().isSunday());
-            Button btnStartTime = (Button) findViewById(R.id.button_start_time);
             if (alarm.getStartTime() != null) {
                 btnStartTime.setText(alarm.getStartTime().getStrTime());
                 Singleton.getInstance().getCacheAlarm().setStartTime(alarm.getStartTime());
             }
-            Button btnEndTime = (Button) findViewById(R.id.button_end_time);
             if (alarm.getEndTime() != null) {
                 btnEndTime.setText(alarm.getEndTime().getStrTime());
                 Singleton.getInstance().getCacheAlarm().setEndTime(alarm.getEndTime());
             }
-            Button btnStartDay = (Button) findViewById(R.id.button_start_day);
             if (alarm.getStartDay() != null) {
                 btnStartDay.setText(alarm.getStartDay().getStrDate());
                 Singleton.getInstance().getCacheAlarm().setStartDay(alarm.getStartDay());
             }
-            Button btnEndDay = (Button) findViewById(R.id.button_end_day);
             if (alarm.getEndDay() != null) {
                 btnEndDay.setText(alarm.getEndDay().getStrDate());
                 Singleton.getInstance().getCacheAlarm().setEndDay(alarm.getEndDay());
             }
             paintCircle(alarm.getRadius());
         } else {
-            EditText alarmName = (EditText) findViewById(R.id.edit_alarm_name);
             alarmName.setText("");
-            SeekBar seekBar = (SeekBar) findViewById(R.id.seekBar_alarm_area);
             seekBar.setProgress(0);
-            CheckBox monday = (CheckBox) findViewById(R.id.checkbox_monday);
             monday.setChecked(false);
-            CheckBox tuesday = (CheckBox) findViewById(R.id.checkbox_tuesday);
             tuesday.setChecked(false);
-            CheckBox wednesday = (CheckBox) findViewById(R.id.checkbox_wednesday);
             wednesday.setChecked(false);
-            CheckBox thursday = (CheckBox) findViewById(R.id.checkbox_thursday);
             thursday.setChecked(false);
-            CheckBox friday = (CheckBox) findViewById(R.id.checkbox_friday);
             friday.setChecked(false);
-            CheckBox saturday = (CheckBox) findViewById(R.id.checkbox_saturday);
             saturday.setChecked(false);
-            CheckBox sunday = (CheckBox) findViewById(R.id.checkbox_sunday);
             sunday.setChecked(false);
-            Button btnStartTime = (Button) findViewById(R.id.button_start_time);
             btnStartTime.setText("set time");
-            Button btnEndTime = (Button) findViewById(R.id.button_end_time);
             btnEndTime.setText("set time");
-            Button btnStartDay = (Button) findViewById(R.id.button_start_day);
             btnStartDay.setText("set time");
-            Button btnEndDay = (Button) findViewById(R.id.button_end_day);
             btnEndDay.setText("set time");
-            paintCircle(50);
+            paintCircle(RADIUS_STEP);
         }
     }
 
@@ -319,9 +311,18 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onMapReady(GoogleMap googleMap) {
         HashMap<String, Alarm> alarms = DataManager.getAlarms();
-
         Singleton.getInstance().setAlarmsMap(alarms);
+        initMap(googleMap);
+    }
 
+    private void initMap(GoogleMap googleMap){
+        initGoogleMaps(googleMap);
+        initAllAlarmOnMap();
+        initInfoWindowAdapter();
+        initAllMapListeners();
+    }
+
+    private void initGoogleMaps(GoogleMap googleMap) {
         mMap = googleMap;
         mMap.getUiSettings().setMapToolbarEnabled(false);
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -335,17 +336,28 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             return;
         }
         mMap.setMyLocationEnabled(true);
+    }
 
+    private void initAllAlarmOnMap() {
         for (String strLatLng : Singleton.getInstance().getAlarmsMap().keySet()) {
             Alarm alarm = Singleton.getInstance().getAlarmsMap().get(strLatLng);
             BitmapDescriptor icon = BitmapDescriptorFactory.fromResource(R.mipmap.ic_res);
             MarkerOptions markerOptions = new MarkerOptions()
                     .position(alarm.getLatLng())
-                    .title("Edit")
+                    .title(alarm.getName())
                     .icon(icon);
             mMap.addMarker(markerOptions);
         }
 
+    }
+
+    private void initAllMapListeners() {
+        initOnMapClickListener();
+        initOnMarkerClickListener();
+        initInfoWindowListener();
+    }
+
+    private void initOnMapClickListener() {
         mMap.setOnMapClickListener(new OnMapClickListener() {
             @Override
             public void onMapClick(LatLng point) {
@@ -354,22 +366,27 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         });
 
+    }
+
+    private void initOnMarkerClickListener() {
         mMap.setOnMarkerClickListener(new OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(Marker marker) {
                 hideDetailsMenu();
-                if (marker != null && Singleton.getInstance().getAlarmsMap().containsKey(getMapKey(marker))) {
+                if (marker != null && Singleton.getInstance().getAlarmsMap().containsKey(MapUtils.getMapKey(marker))) {
                     removeTempMarker();
-                    if (marker.getTitle().equals("Remove")) {
-                        Alarm alarm = Singleton.getInstance().getAlarmsMap().get(getMapKey(marker));
-                        marker.setTitle(alarm.getName());
+                    if (Singleton.getInstance().getCurrentState().equals(STATUS)) {
+                        Alarm alarm = Singleton.getInstance().getAlarmsMap().get(MapUtils.getMapKey(marker));
+                        marker.setTitle( alarm.getName()) ;
                         Singleton.getInstance().setCurrentState(EDIT);
-                    } else {
-                        marker.setTitle("Remove");
+                    }
+                    else if(Singleton.getInstance().getCurrentState().equals(EDIT)){
                         Singleton.getInstance().setCurrentState(REMOVE);
                     }
+                    else{
+                        Singleton.getInstance().setCurrentState(STATUS);
+                    }
                 } else {
-
                     marker.setTitle("Create");
                     Singleton.getInstance().setCurrentState(CREATE);
                 }
@@ -378,13 +395,30 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 return false;
             }
         });
+    }
 
+    private void initInfoWindowAdapter(){
+        mMap.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
+
+            @Override
+            public View getInfoWindow(Marker arg0) {
+                return null;
+            }
+
+            @Override
+            public View getInfoContents(Marker marker) {
+                InfoWindowAdapterHelper infoHelper = new InfoWindowAdapterHelper(mContext);
+                return infoHelper.getInfoTextLayout(marker);
+            }
+        });
+    }
+
+
+    private void initInfoWindowListener() {
         mMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
             @Override
             public void onInfoWindowClick(Marker marker) {
-                if(Singleton.getInstance().getOldCameraPosition() != null){
-                    resetCamera();
-                }
+                resetCamera();
                 switch (Singleton.getInstance().getCurrentState()) {
                     case CREATE:
                         Singleton.getInstance().setCacheAlarm(new Alarm());
@@ -399,6 +433,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         removeTempMarker();
                         showDetailsMenu(marker);
                         break;
+                    case STATUS:
+                        changeStatus();
+                        notifyMe("Status set to: " + Singleton.getInstance().getCurrentAlarm().isActive());
                     default:
                         break;
                 }
@@ -429,12 +466,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mMap.animateCamera(CameraUpdateFactory.newCameraPosition(CameraManager.getCameraPositionWithStyle(latLng, radius)));
     }
 
-    private void zoomWithStyte(LatLng latLng, int progress) {
+    private void zoomWithStyle(LatLng latLng, int progress) {
         mMap.animateCamera(CameraUpdateFactory.newCameraPosition(CameraManager.getCameraPositionWhileZooming(latLng, progress)));
     }
 
     private void resetCamera() {
-        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(CameraManager.resetCameraPosition()));
+        if (Singleton.getInstance().getOldCameraPosition() != null) {
+            mMap.animateCamera(CameraUpdateFactory.newCameraPosition(CameraManager.resetCameraPosition()));
+        }
     }
 
     private void moveToPosition(LatLng latLng) {
@@ -443,20 +482,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private void handleNewMarkers(LatLng point) {
         Singleton.getInstance().setCurrentState(NO_MARKER);
-        handelNewMarker(point);
+        removeTempMarker();
+        removeCircle();
+        createMarker(point);
         moveToPosition(point);
         notifyMe(Singleton.getInstance().getCurrentState().toString());
     }
 
-    private void handelNewMarker(LatLng point) {
-        removeTempMarker();
-        removeCircle();
-        createMarker(point);
-    }
-
     private void removeTempMarker() {
         if (Singleton.getInstance().getCurrentMarker() != null &&
-                !Singleton.getInstance().getAlarmsMap().containsKey(getMapKey(Singleton.getInstance().getCurrentMarker()))) {
+                !Singleton.getInstance().getAlarmsMap().containsKey(MapUtils.getMapKey(Singleton.getInstance().getCurrentMarker()))) {
             removeCurrentMarker();
         }
     }
@@ -468,13 +503,18 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private void removeCurrentMarker() {
         if (Singleton.getInstance().getCurrentMarker() != null) {
-            Singleton.getInstance().getAlarmsMap().remove(getMapKey(Singleton.getInstance().getCurrentMarker()));
+            Singleton.getInstance().getAlarmsMap().remove(MapUtils.getMapKey(Singleton.getInstance().getCurrentMarker()));
             Singleton.getInstance().getCurrentMarker().remove();
             Singleton.getInstance().setCurrentMarker(null);
             DataManager.saveAlarms();
         }
         Singleton.getInstance().setCurrentState(NO_MARKER);
         resetCamera();
+    }
+
+    private void changeStatus(){
+        Singleton.getInstance().getCurrentAlarm().toogleAlarm();
+        DataManager.saveAlarms();
     }
 
     private String addCurrentMarker() {
@@ -499,7 +539,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     getWeek(),
                     Singleton.getInstance().getCurrentMarker().getPosition().latitude,
                     Singleton.getInstance().getCurrentMarker().getPosition().longitude);
-            key = getMapKey(Singleton.getInstance().getCurrentMarker());
+            key = MapUtils.getMapKey(Singleton.getInstance().getCurrentMarker());
             Singleton.getInstance().getAlarmsMap().put(key, alarm);
             BitmapDescriptor icon = BitmapDescriptorFactory.fromResource(R.mipmap.ic_res);
             Singleton.getInstance().getCurrentMarker().setIcon(icon);
@@ -561,15 +601,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         newFragment.show(getSupportFragmentManager(), "datePicker");
     }
 
-    private String getMapKey(Marker marker) {
-        if (marker != null) {
-            return marker.getPosition().latitude + "###" + marker.getPosition().longitude;
-        } else {
-            return "";
-        }
-    }
 
-    private void paintCircle(int radius){
+    private void paintCircle(int radius) {
         removeCircle();
         Singleton.getInstance().setCircle(mMap.addCircle(new CircleOptions()
                 .center(Singleton.getInstance().getCurrentMarker().getPosition())
@@ -579,8 +612,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     }
 
-    private void removeCircle(){
-        if(Singleton.getInstance().getCircle() != null){
+    private void removeCircle() {
+        if (Singleton.getInstance().getCircle() != null) {
             Singleton.getInstance().getCircle().remove();
         }
     }
