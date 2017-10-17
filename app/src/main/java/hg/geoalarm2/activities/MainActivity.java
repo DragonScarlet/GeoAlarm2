@@ -17,10 +17,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.SeekBar;
-import android.widget.Switch;
 import android.widget.Toast;
 
 import com.google.android.gms.location.LocationServices;
@@ -51,7 +49,6 @@ import hg.geoalarm2.managers.DataManager;
 import hg.geoalarm2.objects.alarm.Alarm;
 import hg.geoalarm2.objects.time.Date;
 import hg.geoalarm2.objects.time.Time;
-import hg.geoalarm2.objects.time.Week;
 import hg.geoalarm2.receivers.AlarmReceiver;
 import hg.geoalarm2.utils.MapUtils;
 import hg.geoalarm2.utils.Singleton;
@@ -78,6 +75,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     //Constants
     private final int RADIUS_STEP = 50;
     private final String DATE_FORMAT = "dd.MM.yyyy HH:mm:ss";
+    private final int INITIAL_RADIUS = 500;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -123,26 +121,47 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     hideDetailsMenu();
                     DataManager.saveAlarms();
                     Singleton.getInstance().setCurrentState(NO_MARKER);
-                    Intent my_intent = new Intent(mContext, AlarmReceiver.class);
-                    my_intent.putExtra(INTENT_MAP_KEY, key);
-                    final int _id = (int) System.currentTimeMillis();
-                    pendingIntent = PendingIntent.getBroadcast(MainActivity.this, _id, my_intent, PendingIntent.FLAG_ONE_SHOT);
-                    try {
-                        Date date = Singleton.getInstance().getCacheAlarm().getStartDay();
-                        Time time = Singleton.getInstance().getCacheAlarm().getStartTime();
-                        SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
-                        String strDate = date.getStrDate() + " " + time.getStrTime();
-                        java.util.Date parsedDate = sdf.parse(strDate);
-                        long millis = parsedDate.getTime();
-                        alarmManager.set(AlarmManager.RTC_WAKEUP, millis, pendingIntent);
-                    } catch (ParseException e) {
-                        e.printStackTrace();
-                    }
+                    enableAlarm(key);
                 } else {
                     notifyMe("Please fill all the information");
                 }
             }
         });
+    }
+
+    private void enableAlarm(String key){
+        Alarm alarm = Singleton.getInstance().getAlarmsMap().get(key);
+        final int id = (int) System.currentTimeMillis();
+        alarm.setPendingId(id);
+        Singleton.getInstance().getAlarmsMap().put(key, alarm);
+        Intent my_intent = new Intent(mContext, AlarmReceiver.class);
+        my_intent.putExtra(INTENT_MAP_KEY, key);
+        pendingIntent = PendingIntent.getBroadcast(MainActivity.this, alarm.getPendingId(), my_intent, PendingIntent.FLAG_ONE_SHOT);
+        try {
+            Date date = Singleton.getInstance().getCacheAlarm().getStartDay();
+            Time time = Singleton.getInstance().getCacheAlarm().getStartTime();
+            SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
+            String strDate = date.getStrDate() + " " + time.getStrTime();
+            java.util.Date parsedDate = sdf.parse(strDate);
+            long millis = parsedDate.getTime();
+            alarmManager.set(AlarmManager.RTC_WAKEUP, millis, pendingIntent);
+            notifyMe("Alarm successfully activated!");
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private void disableAlarm(String key){
+        Alarm alarm = Singleton.getInstance().getAlarmsMap().get(key);
+        if(pendingIntent != null && alarm.isActive()){
+            Intent my_intent = new Intent(mContext, AlarmReceiver.class);
+            my_intent.putExtra(INTENT_MAP_KEY, key);
+            pendingIntent = PendingIntent.getBroadcast(MainActivity.this, alarm.getPendingId(), my_intent, PendingIntent.FLAG_ONE_SHOT);
+            pendingIntent.cancel();
+            alarmManager.cancel(pendingIntent);
+            notifyMe("Alarm successfully deactivated!");
+        }
     }
 
     private void initTimers() {
@@ -199,7 +218,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                // TODO Auto-generated method stub
                 paintCircle((progress + 1) * seekBarOffset);
                 zoomWithStyle(Singleton.getInstance().getCurrentMarker().getPosition(), progress);
             }
@@ -218,13 +236,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         if (alarm != null) {
             moveWithStyleToPosition(Singleton.getInstance().getCurrentMarker().getPosition(), alarm.getRadius());
         } else {
-            moveWithStyleToPosition(Singleton.getInstance().getCurrentMarker().getPosition(), 5000);
+            moveWithStyleToPosition(Singleton.getInstance().getCurrentMarker().getPosition(), INITIAL_RADIUS);
         }
     }
 
 
     private void setAlarmDetails(Alarm alarm) {
         EditText alarmName = (EditText) findViewById(R.id.edit_alarm_name);
+        /*
         CheckBox monday = (CheckBox) findViewById(R.id.checkbox_monday);
         CheckBox tuesday = (CheckBox) findViewById(R.id.checkbox_tuesday);
         CheckBox wednesday = (CheckBox) findViewById(R.id.checkbox_wednesday);
@@ -232,6 +251,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         CheckBox friday = (CheckBox) findViewById(R.id.checkbox_friday);
         CheckBox saturday = (CheckBox) findViewById(R.id.checkbox_saturday);
         CheckBox sunday = (CheckBox) findViewById(R.id.checkbox_sunday);
+        */
         SeekBar seekBar = (SeekBar) findViewById(R.id.seekBar_alarm_area);
         Button btnStartTime = (Button) findViewById(R.id.button_start_time);
         Button btnEndTime = (Button) findViewById(R.id.button_end_time);
@@ -241,6 +261,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             alarmName.setText(alarm.getName());
             int progress = alarm.getRadius() / RADIUS_STEP;
             seekBar.setProgress(progress);
+            /*
             monday.setChecked(alarm.getWeek().isMonday());
             tuesday.setChecked(alarm.getWeek().isTuesday());
             wednesday.setChecked(alarm.getWeek().isWednesday());
@@ -248,6 +269,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             friday.setChecked(alarm.getWeek().isFriday());
             saturday.setChecked(alarm.getWeek().isSaturday());
             sunday.setChecked(alarm.getWeek().isSunday());
+            */
             if (alarm.getStartTime() != null) {
                 btnStartTime.setText(alarm.getStartTime().getStrTime());
                 Singleton.getInstance().getCacheAlarm().setStartTime(alarm.getStartTime());
@@ -266,8 +288,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
             paintCircle(alarm.getRadius());
         } else {
-            alarmName.setText("");
-            seekBar.setProgress(0);
+            alarmName.setText("New Alarm");
+            int progress = INITIAL_RADIUS / RADIUS_STEP;
+            seekBar.setProgress(progress);
+            /*
             monday.setChecked(false);
             tuesday.setChecked(false);
             wednesday.setChecked(false);
@@ -275,6 +299,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             friday.setChecked(false);
             saturday.setChecked(false);
             sunday.setChecked(false);
+            */
             btnStartTime.setText("set time");
             btnEndTime.setText("set time");
             btnStartDay.setText("set time");
@@ -434,7 +459,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         showDetailsMenu(marker);
                         break;
                     case STATUS:
-                        changeStatus();
+                        changeStatus(marker);
                         notifyMe("Status set to: " + Singleton.getInstance().getCurrentAlarm().isActive());
                     default:
                         break;
@@ -512,8 +537,17 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         resetCamera();
     }
 
-    private void changeStatus(){
-        Singleton.getInstance().getCurrentAlarm().toogleAlarm();
+    private void changeStatus(Marker marker){
+        Alarm alarm = Singleton.getInstance().getAlarmsMap().get(MapUtils.getMapKey(marker));
+        String key = MapUtils.getMapKey(marker);
+        if(alarm.isActive()){
+            disableAlarm(key);
+        }
+        else{
+            enableAlarm(key);
+        }
+        alarm.toogleAlarm();
+        Singleton.getInstance().getAlarmsMap().put(MapUtils.getMapKey(marker), alarm);
         DataManager.saveAlarms();
     }
 
@@ -536,7 +570,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     radius,
                     true,
                     type,
-                    getWeek(),
+                    null,
                     Singleton.getInstance().getCurrentMarker().getPosition().latitude,
                     Singleton.getInstance().getCurrentMarker().getPosition().longitude);
             key = MapUtils.getMapKey(Singleton.getInstance().getCurrentMarker());
@@ -546,7 +580,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
         return key;
     }
-
+/*
     private Week getWeek() {
         CheckBox monday = (CheckBox) findViewById(R.id.checkbox_monday);
         CheckBox tuesday = (CheckBox) findViewById(R.id.checkbox_tuesday);
@@ -563,6 +597,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 saturday.isChecked(),
                 sunday.isChecked());
     }
+    */
 
     private void notifyMe(String msg) {
         Context context = getApplicationContext();
@@ -572,25 +607,25 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         toast.show();
     }
 
-    public void onCheckboxClicked(View view) {
-        switch (view.getId()) {
-            case R.id.checkbox_monday:
-                break;
-            case R.id.checkbox_tuesday:
-                break;
+    /*
+        public void onCheckboxClicked(View view) {
+            switch (view.getId()) {
+                case R.id.checkbox_monday:
+                    break;
+                case R.id.checkbox_tuesday:
+                    break;
+            }
         }
-    }
-
-    public void onSwitchClicked(View view) {
-        View weekdays = findViewById(R.id.weekdays);
-        Switch switchView = (Switch) findViewById(R.id.switch_multiple_times);
-        if (switchView.isChecked()) {
-            weekdays.setVisibility(View.VISIBLE);
-        } else {
-            weekdays.setVisibility(View.GONE);
+        public void onSwitchClicked(View view) {
+            View weekdays = findViewById(R.id.weekdays);
+            Switch switchView = (Switch) findViewById(R.id.switch_multiple_times);
+            if (switchView.isChecked()) {
+                weekdays.setVisibility(View.VISIBLE);
+            } else {
+                weekdays.setVisibility(View.GONE);
+            }
         }
-    }
-
+    */
     public void showTimePickerDialog(View v) {
         DialogFragment newFragment = new TimePickerFragment();
         newFragment.show(getSupportFragmentManager(), "timePicker");
@@ -609,7 +644,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 .radius(radius)
                 .strokeColor(0x220000FF)
                 .fillColor(0x220000FF)));
-
     }
 
     private void removeCircle() {

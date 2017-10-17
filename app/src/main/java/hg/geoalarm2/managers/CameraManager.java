@@ -47,7 +47,8 @@ public class CameraManager {
     }
 
     private static float getZoom(int radius){
-        return (float) (15 - Math.log(radius / 500) / Math.log(2));
+        float r = (float) radius;
+        return (float) (15 - Math.log(r / 500) / Math.log(2));
     }
 
 }

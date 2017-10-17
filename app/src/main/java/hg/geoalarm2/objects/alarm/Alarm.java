@@ -27,6 +27,7 @@ public class Alarm {
     private Week week;
     private double latitude;
     private double longitude;
+    private int pendingId;
 
     public Alarm(){
         this.name = "";
@@ -150,5 +151,13 @@ public class Alarm {
 
     public void toogleAlarm(){
         active = !active;
+    }
+
+    public int getPendingId() {
+        return pendingId;
+    }
+
+    public void setPendingId(int pendingId) {
+        this.pendingId = pendingId;
     }
 }
