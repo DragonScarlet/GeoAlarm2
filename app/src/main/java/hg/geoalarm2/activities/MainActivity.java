@@ -8,10 +8,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.icu.text.SimpleDateFormat;
+import android.location.Location;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -21,6 +25,13 @@ import android.widget.EditText;
 import android.widget.SeekBar;
 import android.widget.Toast;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.Geofence;
+import com.google.android.gms.location.GeofencingClient;
+import com.google.android.gms.location.GeofencingRequest;
+import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -34,8 +45,11 @@ import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import hg.geoalarm2.R;
@@ -50,6 +64,7 @@ import hg.geoalarm2.objects.alarm.Alarm;
 import hg.geoalarm2.objects.time.Date;
 import hg.geoalarm2.objects.time.Time;
 import hg.geoalarm2.receivers.AlarmReceiver;
+import hg.geoalarm2.services.GeofenceTransitionsIntentService;
 import hg.geoalarm2.utils.MapUtils;
 import hg.geoalarm2.utils.Singleton;
 
@@ -65,6 +80,8 @@ import static hg.geoalarm2.enums.State.REMOVE;
 import static hg.geoalarm2.enums.State.STATUS;
 
 
+
+
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, AlarmDetailsListDialogFragment.Listener {
     private GoogleMap mMap;
     private Context mContext;
@@ -76,6 +93,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private final int RADIUS_STEP = 50;
     private final String DATE_FORMAT = "dd.MM.yyyy HH:mm:ss";
     private final int INITIAL_RADIUS = 500;
+    private GeofencingClient mGeofencingClient;
+    private ArrayList<Geofence> mGeofenceList;
+    private PendingIntent mGeofencePendingIntent;
+
+    GoogleApiClient googleApiClient = null;
+    private final String TAG = "DEBUG";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,8 +109,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 .findFragmentById(R.id.map);
         this.mContext = this;
         alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
-        Singleton.getInstance().setGeofencePendingIntent(null);
-        Singleton.getInstance().setGeofencingClient(LocationServices.getGeofencingClient(this));
         mapFragment.getMapAsync(this);
         hideDetailsMenu();
         // Create an ArrayAdapter using the string array and a default spinner layout
@@ -98,7 +119,118 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         // Apply the adapter to the spinner
         initAllListeners();
         Singleton.getInstance().setCurrentState(NO_MARKER);
+        mGeofencingClient = LocationServices.getGeofencingClient(this);
+        mGeofenceList = new ArrayList<>();
+
+        mGeofenceList.add(new Geofence.Builder()
+                // Set the request ID of the geofence. This is a string to identify this
+                // geofence.
+                .setRequestId("1")
+                .setCircularRegion(
+                        52.271649,
+                        10.539307,
+                        50000
+                )
+                .setExpirationDuration(Geofence.NEVER_EXPIRE)
+                .setLoiteringDelay(1000)
+                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER |
+                        Geofence.GEOFENCE_TRANSITION_EXIT)
+                .build());
+
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        mGeofencingClient.addGeofences(getGeofencingRequest(), getGeofencePendingIntent())
+                .addOnSuccessListener(Singleton.getInstance().getMainActivity(), new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        // Geofences added
+                        Log.d(TAG, "Geofences successfully added!");
+                    }
+                })
+                .addOnFailureListener(Singleton.getInstance().getMainActivity(), new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        // Failed to add geofences
+                        Log.d(TAG, "Geofences failed to add!");
+                    }
+                });
+
+
+        googleApiClient = new GoogleApiClient.Builder(this)
+                .addApi(LocationServices.API)
+                .addConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
+                    @Override
+                    public void onConnected(@Nullable Bundle bundle) {
+                        startLocationMonitoring();
+                    }
+
+                    @Override
+                    public void onConnectionSuspended(int i) {
+
+                    }
+                })
+                .addOnConnectionFailedListener(new GoogleApiClient.OnConnectionFailedListener() {
+                    @Override
+                    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+
+                    }
+                })
+                .build();
     }
+
+
+    private GeofencingRequest getGeofencingRequest() {
+        GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
+        builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER);
+        builder.addGeofences(mGeofenceList);
+        return builder.build();
+    }
+
+
+    private PendingIntent getGeofencePendingIntent() {
+        // Reuse the PendingIntent if we already have it.
+        if (mGeofencePendingIntent != null) {
+            return mGeofencePendingIntent;
+        }
+        Intent intent = new Intent(this, GeofenceTransitionsIntentService.class);
+        // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when
+        // calling addGeofences() and removeGeofences().
+        mGeofencePendingIntent = PendingIntent.getService(this, 0, intent, PendingIntent.
+                FLAG_UPDATE_CURRENT);
+        return mGeofencePendingIntent;
+    }
+
+    private void startLocationMonitoring(){
+        Log.d(TAG, "startLocation called");
+        try{
+            LocationRequest locationRequest = LocationRequest.create()
+                    .setInterval(10000)
+                    .setFastestInterval(5000)
+                    .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+            LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient,
+                    locationRequest, new LocationListener() {
+                        @Override
+                        public void onLocationChanged(Location location) {
+                            Log.d(TAG, "Location update lat/long" + location.getLatitude() + " " + location.getLongitude());
+                        }
+                    });
+        }
+        catch(SecurityException e)
+        {
+            Log.d(TAG, "SecurityException - " + e.getMessage());
+        }
+    }
+
+
 
 
     private void initAllListeners() {
@@ -338,6 +470,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         HashMap<String, Alarm> alarms = DataManager.getAlarms();
         Singleton.getInstance().setAlarmsMap(alarms);
         initMap(googleMap);
+
     }
 
     private void initMap(GoogleMap googleMap){

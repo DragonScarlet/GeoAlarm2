@@ -31,7 +31,7 @@ public class GeofenceTransitionsIntentService extends IntentService {
     protected void onHandleIntent(@Nullable Intent intent) {
         GeofencingEvent geofencingEvent = GeofencingEvent.fromIntent(intent);
         if (geofencingEvent.hasError()) {
-            String errorMessage = "ERROR";
+            String errorMessage = "geofenceTransition ERROR";
             Log.e(TAG, errorMessage);
             return;
         }
@@ -57,10 +57,10 @@ public class GeofenceTransitionsIntentService extends IntentService {
             */
             // Send notification and log the transition details.
             //sendNotification(geofenceTransitionDetails);
-            Log.i(TAG, "OK");
+            Log.i(TAG, "geofenceTransition OK");
         } else {
             // Log the error.
-            Log.e(TAG, "ERROR 2");
+            Log.e(TAG, "geofenceTransition ERROR 2");
         }
     }
 }

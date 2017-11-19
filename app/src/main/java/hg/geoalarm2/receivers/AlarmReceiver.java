@@ -6,14 +6,19 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.view.View;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.Geofence;
+import com.google.android.gms.location.GeofencingClient;
 import com.google.android.gms.location.GeofencingRequest;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 
@@ -35,19 +40,46 @@ public class AlarmReceiver extends BroadcastReceiver {
 
     Context mContext;
     final int DELAY = 5000;
+    private PendingIntent mGeofencePendingIntent;
+    private GeofencingClient mGeofencingClient;
+    private GoogleApiClient googleApiClient;
+    private GoogleApiClient.ConnectionCallbacks connectionAddListener =
+            new GoogleApiClient.ConnectionCallbacks() {
+                @Override
+                public void onConnected(Bundle bundle) {
+
+                }
+
+                @Override
+                public void onConnectionSuspended(int i) {
+
+                }
+            };
+
+    private GoogleApiClient.OnConnectionFailedListener connectionFailedListener =
+            new GoogleApiClient.OnConnectionFailedListener() {
+                @Override
+                public void onConnectionFailed(ConnectionResult connectionResult) {
+
+                }
+            };
+
+
+
     @Override
     public void onReceive(Context context, Intent intent) {
         Log.d("DEBUG", "I got you in my sight!");
         mContext = context;
+        mGeofencingClient = LocationServices.getGeofencingClient(Singleton.getInstance().getMainActivity());
 //        Intent service_intent = new Intent(context, RingtonePlayingService.class);
 
-        String mapKey = intent.getStringExtra(INTENT_MAP_KEY);
-        Alarm alarm = Singleton.getInstance().getAlarmsMap().get(mapKey);
 
 //        Intent popUpIntent = new Intent(context, AlarmActivity.class);
 
 //        context.startActivity(popUpIntent);
         //context.startService(service_intent);
+        String mapKey = intent.getStringExtra(INTENT_MAP_KEY);
+        Alarm alarm = Singleton.getInstance().getAlarmsMap().get(mapKey);
         Geofence geofence = new Geofence.Builder()
                 .setRequestId(mapKey)
                 .setCircularRegion(
@@ -57,24 +89,30 @@ public class AlarmReceiver extends BroadcastReceiver {
                 )
                 .setLoiteringDelay(DELAY)
                 .setExpirationDuration(DateUtils.getTimeDifference(alarm))
-                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_DWELL)
+                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER)
                 .build();
         Singleton.getInstance().getGeofenceMap().put(mapKey, geofence);
 
+        connectWithCallbacks(connectionAddListener);
         addGeofences();
+    }
+
+    private void addGeofence(){
+
     }
 
     private PendingIntent getGeofencePendingIntent() {
         // Reuse the PendingIntent if we already have it.
-        if (Singleton.getInstance().getGeofencePendingIntent() != null) {
-            return Singleton.getInstance().getGeofencePendingIntent();
+        if (mGeofencePendingIntent != null) {
+            return mGeofencePendingIntent;
         }
         Intent intent = new Intent(Singleton.getInstance().getMainActivity(), GeofenceTransitionsIntentService.class);
         // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when
         // calling addGeofences() and removeGeofences().
-        Singleton.getInstance().setGeofencePendingIntent(PendingIntent.getService(Singleton.getInstance().getMainActivity(), 0, intent, PendingIntent.
-                FLAG_UPDATE_CURRENT));
-        return Singleton.getInstance().getGeofencePendingIntent();
+        ;
+        mGeofencePendingIntent = PendingIntent.getService(Singleton.getInstance().getMainActivity(), 0, intent,
+                PendingIntent.FLAG_UPDATE_CURRENT);
+        return mGeofencePendingIntent;
     }
 
     private GeofencingRequest getGeofencingRequest() {
@@ -105,7 +143,10 @@ public class AlarmReceiver extends BroadcastReceiver {
             return;
         }
 
-        Singleton.getInstance().getGeofencingClient().addGeofences(getGeofencingRequest(), getGeofencePendingIntent())
+        mGeofencingClient.addGeofences(
+                getGeofencingRequest(),
+                getGeofencePendingIntent()
+                )
                 .addOnSuccessListener(Singleton.getInstance().getMainActivity(), new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
@@ -135,5 +176,13 @@ public class AlarmReceiver extends BroadcastReceiver {
     }
 
 
+    private void connectWithCallbacks(GoogleApiClient.ConnectionCallbacks callbacks) {
+        googleApiClient = new GoogleApiClient.Builder(mContext)
+                .addApi(LocationServices.API)
+                .addConnectionCallbacks(callbacks)
+                .addOnConnectionFailedListener(connectionFailedListener)
+                .build();
+        googleApiClient.connect();
+    }
 
 }
