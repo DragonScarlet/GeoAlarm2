@@ -40,8 +40,7 @@ public class GeofenceTransitionsIntentService extends IntentService {
         int geofenceTransition = geofencingEvent.getGeofenceTransition();
 
         // Test that the reported transition was of interest.
-        if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER ||
-                geofenceTransition == Geofence.GEOFENCE_TRANSITION_EXIT) {
+        if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER) {
 
             // Get the geofences that were triggered. A single event can trigger
             // multiple geofences.
@@ -57,8 +56,17 @@ public class GeofenceTransitionsIntentService extends IntentService {
             */
             // Send notification and log the transition details.
             //sendNotification(geofenceTransitionDetails);
-            Log.i(TAG, "geofenceTransition OK");
-        } else {
+            Log.i(TAG, "geofenceTransition on GEOFENCE_TRANSITION_ENTER");
+        }
+        else if(geofenceTransition == Geofence.GEOFENCE_TRANSITION_EXIT){
+            Log.i(TAG, "geofenceTransition on GEOFENCE_TRANSITION_EXIT");
+
+        }
+        else if(geofenceTransition == Geofence.GEOFENCE_TRANSITION_DWELL){
+            Log.i(TAG, "geofenceTransition on GEOFENCE_TRANSITION_DWELL");
+
+        }
+        else {
             // Log the error.
             Log.e(TAG, "geofenceTransition ERROR 2");
         }
